@@ -1,5 +1,5 @@
-import streamlit as st
 import os
+import streamlit as st
 from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_cohere import CohereEmbeddings
@@ -10,22 +10,17 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains import create_retrieval_chain
 
-# === Ask user to enter their own API key ===
-st.set_page_config(page_title="PDF Q&A with LangChain + Cohere")
-st.title("📄 Ask Questions from Your PDF (Bring Your Own API Key)")
-
-COHERE_API_KEY = st.text_input("🔑 Enter your Cohere API Key to continue:", type="password")
-
-if not COHERE_API_KEY:
-    st.warning("Please enter your Cohere API key to use the app.")
-    st.caption("You can get a free key at https://dashboard.cohere.com/")
-    st.stop()
-
-# Initialize LLM with user-provided key
+# Set Cohere key from Hugging Face Secrets
+COHERE_API_KEY = st.secrets["COHERE_API_KEY"]
+# Initialize LLM
 llm = ChatCohere(cohere_api_key=COHERE_API_KEY)
 
-uploaded_file = st.file_uploader("📎 Upload your PDF", type="pdf")
-question = st.text_input("💬 Enter your question")
+# Streamlit UI
+st.set_page_config(page_title="PDF Q&A with LangChain + Cohere")
+st.title("📄 Ask Questions from Your PDF (Cohere + LangChain)")
+
+uploaded_file = st.file_uploader("Upload your PDF", type="pdf")
+question = st.text_input("Enter your question")
 
 if uploaded_file and question:
     # Save uploaded file temporarily
@@ -43,10 +38,7 @@ if uploaded_file and question:
     chunks = text_splitter.split_documents(docs)
 
     # Embeddings + FAISS
-    embeddings = CohereEmbeddings(
-        model="embed-english-v3.0",
-        cohere_api_key=COHERE_API_KEY
-    )
+    embeddings = CohereEmbeddings(model="embed-english-v3.0", cohere_api_key=COHERE_API_KEY)
     db = FAISS.from_documents(chunks, embeddings)
     retriever = db.as_retriever(search_kwargs={"k": 3})
 
@@ -64,11 +56,11 @@ if uploaded_file and question:
     Answer:
     """)
 
-    # Create RAG chain
+    # RAG chain
     document_chain = create_stuff_documents_chain(llm, prompt)
     rag_chain = create_retrieval_chain(retriever, document_chain)
 
-    # Run RAG chain
+    # Run RAG
     with st.spinner("Thinking..."):
         response = rag_chain.invoke({"input": question})
         st.subheader("📌 Answer")
