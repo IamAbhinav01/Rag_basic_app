@@ -1,5 +1,5 @@
-# 📄 PDF Q&A App using LangChain + Cohere
-
+# 📄 PDF Q&A App using LangChain + Cohere + Ollama
+# To Do The Project On Ollama View The Folder OPEN SOURCE MODEL OLLAMA
 This project demonstrates a simple Retrieval-Augmented Generation (RAG) application that allows users to upload a PDF and ask questions based on its content. It uses LangChain, FAISS, and Cohere's embedding and language models.
 
 ---
